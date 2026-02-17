@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobtex_mobile/services/api_service.dart';
 import 'package:mobtex_mobile/screens/login_screen.dart';
+import 'package:mobtex_mobile/screens/sales_screen.dart';
+import 'package:mobtex_mobile/screens/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -137,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             title: 'Satış',
                             icon: Icons.point_of_sale_rounded,
                             color: Color(0xFF10b981),
-                            onTap: () => _showComingSoon('Satış'),
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SalesScreen())),
                           ),
                           MenuButton(
                             title: 'Alış',
@@ -168,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             title: 'Ayarlar',
                             icon: Icons.settings_rounded,
                             color: Color(0xFF64748b),
-                            onTap: () => _showComingSoon('Ayarlar'),
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
                           ),
                           MenuButton(
                             title: 'Yardım',
