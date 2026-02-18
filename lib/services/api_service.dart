@@ -1,22 +1,22 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:mobtex_mobile/helpers/database_helper.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://10.1.20.55:8282';
-
   final _storage = const FlutterSecureStorage();
+  final _dbHelper = DatabaseHelper.instance;
+
+  Future<String> get baseUrl => _dbHelper.getServerUrl();
 
   // ─── LOGIN ─────────────────────────────────────────
   Future<Map<String, dynamic>> login(String username, String password) async {
     try {
+      final url = await baseUrl;
       final response = await http.post(
-        Uri.parse('$baseUrl/api/auth/login'),
+        Uri.parse('$url/api/auth/login'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'username': username,
-          'password': password,
-        }),
+        body: jsonEncode({'username': username, 'password': password}),
       ).timeout(const Duration(seconds: 15));
 
       final data = jsonDecode(response.body);
@@ -26,50 +26,25 @@ class ApiService {
         await _storage.write(key: 'username', value: data['username'] ?? username);
         await _storage.write(key: 'full_name', value: data['fullName'] ?? '');
         await _storage.write(key: 'role', value: data['role'] ?? '');
-
-        return {
-          'success': true,
-          'message': 'Giris basarili',
-          'username': data['username'] ?? username,
-        };
+        return {'success': true, 'message': 'Giris basarili', 'username': data['username'] ?? username};
       }
 
-      return {
-        'success': false,
-        'message': data['message'] ?? 'Kullanici adi veya sifre hatali',
-      };
+      return {'success': false, 'message': data['message'] ?? 'Kullanici adi veya sifre hatali'};
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'Baglanti hatasi: Sunucuya erisemiyor ($baseUrl)',
-      };
+      final url = await baseUrl;
+      return {'success': false, 'message': 'Baglanti hatasi: $url adresine erisilemedi'};
     }
   }
 
-  // ─── TOKEN ─────────────────────────────────────────
-  Future<String?> getToken() async {
-    return await _storage.read(key: 'jwt_token');
-  }
-
+  Future<String?> getToken() => _storage.read(key: 'jwt_token');
   Future<bool> isLoggedIn() async {
     final token = await _storage.read(key: 'jwt_token');
     return token != null && token.isNotEmpty;
   }
+  Future<String?> getUsername() => _storage.read(key: 'username');
+  Future<String?> getRole() => _storage.read(key: 'role');
+  Future<void> logout() => _storage.deleteAll();
 
-  Future<String?> getUsername() async {
-    return await _storage.read(key: 'username');
-  }
-
-  Future<String?> getRole() async {
-    return await _storage.read(key: 'role');
-  }
-
-  // ─── LOGOUT ────────────────────────────────────────
-  Future<void> logout() async {
-    await _storage.deleteAll();
-  }
-
-  // ─── AUTH HEADER ───────────────────────────────────
   Future<Map<String, String>> _authHeaders() async {
     final token = await getToken();
     return {
@@ -78,48 +53,140 @@ class ApiService {
     };
   }
 
-  // ─── SYNC ──────────────────────────────────────────
-  Future<Map<String, dynamic>> syncAllData() async {
-    try {
-      final headers = await _authHeaders();
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/test/hello'),
-        headers: headers,
-      ).timeout(const Duration(seconds: 15));
+Future<Map<String, dynamic>> syncAllData(String companyCode, String terminalId) async {
+  try {
+    final url = await baseUrl;
+    final headers = await _authHeaders();
 
-      if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'message': 'Veriler basariyla esitlendi',
-          'data': jsonDecode(response.body),
-        };
-      }
+    final response = await http.post(
+      Uri.parse('$url/api/sync/full-sync'),
+      headers: headers,
+      body: jsonEncode({
+        'companyCode': companyCode,
+        'terminalId': terminalId,
+      }),
+    ).timeout(const Duration(seconds: 30));
 
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return {
+        'success': true,
+        'message': 'Veriler basariyla esitlendi',
+        'data': data,
+      };
+    } else if (response.statusCode == 401) {
       return {
         'success': false,
-        'message': 'Sunucuya erisilemedi (${response.statusCode})',
+        'message': 'Oturum suresi dolmus, tekrar giris yapin',
       };
+    } else {
+      return {
+        'success': false,
+        'message': 'Sunucu hatasi (${response.statusCode})',
+      };
+    }
+  } catch (e) {
+    return {
+      'success': false,
+      'message': 'Baglanti hatasi: $e',
+    };
+  }
+}
+
+  Future<Map<String, dynamic>> sendMrtcData({
+    required String companyCode,
+    required String terminalId,
+    required int prosesId,
+    required List<Map<String, dynamic>> mrtcData,
+  })   async {
+    try {
+      final url = await baseUrl;
+      final headers = await _authHeaders();
+
+      final response = await http.post(
+        Uri.parse('$url/api/mobiledata/send-mrtc'),
+        headers: headers,
+        body: jsonEncode({
+          'companyCode': companyCode,
+          'terminalId': terminalId,
+          'prosesId': prosesId,
+          'username': 'mobile_user',
+          'mrtcData': mrtcData,
+        }),
+      ).timeout(const Duration(seconds: 120));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'data': data,
+        };
+      } else if (response.statusCode == 401) {
+        return {
+          'success': false,
+          'errorMessage': 'Oturum süresi dolmuş, tekrar giriş yapın',
+        };
+      } else {
+        final data = jsonDecode(response.body);
+        return {
+          'success': false,
+          'errorMessage': data['errorMessage'] ?? 'Sunucu hatası (${response.statusCode})',
+        };
+      }
     } catch (e) {
       return {
         'success': false,
-        'message': 'Baglanti hatasi: $e',
+        'errorMessage': 'Bağlantı hatası: $e',
       };
     }
   }
 
-  // ─── TEST ──────────────────────────────────────────
-  Future<Map<String, dynamic>> testHelloWorld() async {
+  Future<Map<String, dynamic>> getSeriAmbarBakiye({
+    required String companyCode,
+    required int subeKodu,
+    required String filter,
+    String? username,
+    String? terminalId,
+  }) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/test/hello'),
-      ).timeout(const Duration(seconds: 10));
+      final url = await baseUrl;
+      final headers = await _authHeaders();
+
+      final response = await http.post(
+        Uri.parse('$url/api/stock/seri-ambar-bakiye'),
+        headers: headers,
+        body: jsonEncode({
+          'companyCode': companyCode,
+          'subeKodu': subeKodu,
+          'filter': filter,
+          'username': username ?? '',
+          'terminalId': terminalId ?? '',
+        }),
+      ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
-        return {'success': true, 'data': jsonDecode(response.body)};
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'data': data,
+        };
+      } else if (response.statusCode == 401) {
+        return {
+          'success': false,
+          'errorMessage': 'Oturum süresi dolmuş, tekrar giriş yapın',
+        };
+      } else {
+        final data = jsonDecode(response.body);
+        return {
+          'success': false,
+          'errorMessage': data['errorMessage'] ?? 'Sunucu hatası (${response.statusCode})',
+        };
       }
-      return {'success': false, 'message': 'API hatasi'};
     } catch (e) {
-      return {'success': false, 'message': 'Baglanti hatasi: $e'};
+      return {
+        'success': false,
+        'errorMessage': 'Bağlantı hatası: $e',
+      };
     }
   }
 }

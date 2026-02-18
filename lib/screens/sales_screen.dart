@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mobtex_mobile/screens/toptan_satis_screen.dart';
+import 'package:mobtex_mobile/screens/perakende_satis_screen.dart';
 
 class SalesScreen extends StatelessWidget {
   const SalesScreen({super.key});
@@ -9,12 +11,12 @@ class SalesScreen extends StatelessWidget {
       backgroundColor: Colors.grey[100],
       body: CustomScrollView(
         slivers: [
-          // Modern SliverAppBar - scroll edilince küçülür
+          // Modern SliverAppBar
           SliverAppBar(
             expandedHeight: 160,
             floating: false,
             pinned: true,
-            backgroundColor: Color(0xFF667eea),
+            backgroundColor: const Color(0xFF667eea),
             leading: IconButton(
               icon: Container(
                 padding: const EdgeInsets.all(8),
@@ -27,7 +29,7 @@ class SalesScreen extends StatelessWidget {
               onPressed: () => Navigator.pop(context),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+              titlePadding: const EdgeInsets.only(left: 72, bottom: 16),
               title: const Text(
                 'Satış İşlemleri',
                 style: TextStyle(
@@ -37,7 +39,7 @@ class SalesScreen extends StatelessWidget {
                 ),
               ),
               background: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -46,7 +48,6 @@ class SalesScreen extends StatelessWidget {
                 ),
                 child: Stack(
                   children: [
-                    // Dekoratif daireler
                     Positioned(
                       right: -30,
                       top: -30,
@@ -71,7 +72,6 @@ class SalesScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // İkon
                     Positioned(
                       right: 30,
                       bottom: 20,
@@ -94,59 +94,72 @@ class SalesScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Üst bilgi kartı
                   _buildInfoCard(),
                   const SizedBox(height: 24),
-
-                  // Başlık
                   _buildSectionTitle('Satış Türü Seçin'),
                   const SizedBox(height: 16),
 
-                  // Satış butonları
+                  // Toptan Satış
                   _buildSalesButton(
                     context,
                     title: 'Toptan Satış',
                     subtitle: 'Büyük miktarlı satış işlemleri',
                     icon: Icons.warehouse_rounded,
-                    color: Color(0xFF10b981),
+                    color: const Color(0xFF10b981),
                     tag: 'TOPTAN',
-                    tagColor: Color(0xFF059669),
-                    onTap: () => _showComingSoon(context, 'Toptan Satış'),
+                    tagColor: const Color(0xFF059669),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ToptanSatisScreen())),
                   ),
                   const SizedBox(height: 12),
 
+                  // Perakende Satış
                   _buildSalesButton(
                     context,
                     title: 'Perakende Satış',
                     subtitle: 'Bireysel müşteri satış işlemleri',
                     icon: Icons.shopping_bag_rounded,
-                    color: Color(0xFF667eea),
+                    color: const Color(0xFF667eea),
                     tag: 'PERAKENDE',
-                    tagColor: Color(0xFF4f46e5),
-                    onTap: () => _showComingSoon(context, 'Perakende Satış'),
+                    tagColor: const Color(0xFF4f46e5),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PerakendeSatisScreen())),
                   ),
                   const SizedBox(height: 12),
 
+                  // İhracat Satış
+                  _buildSalesButton(
+                    context,
+                    title: 'İhracat Satış',
+                    subtitle: 'Uluslararası satış işlemleri',
+                    icon: Icons.public_rounded,
+                    color: const Color(0xFF3b82f6),
+                    tag: 'İHRACAT',
+                    tagColor: const Color(0xFF2563eb),
+                    onTap: () => _showComingSoon(context, 'İhracat Satış'),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // İşletmeler Arası Satış
                   _buildSalesButton(
                     context,
                     title: 'İşletmeler Arası Satış',
                     subtitle: 'B2B satış ve transfer işlemleri',
                     icon: Icons.business_rounded,
-                    color: Color(0xFFf59e0b),
+                    color: const Color(0xFFf59e0b),
                     tag: 'B2B',
-                    tagColor: Color(0xFFd97706),
+                    tagColor: const Color(0xFFd97706),
                     onTap: () => _showComingSoon(context, 'İşletmeler Arası Satış'),
                   ),
                   const SizedBox(height: 12),
 
+                  // Satış İade
                   _buildSalesButton(
                     context,
                     title: 'Satış İade',
                     subtitle: 'Müşteri iade ve geri alım işlemleri',
                     icon: Icons.assignment_return_rounded,
-                    color: Color(0xFFef4444),
+                    color: const Color(0xFFef4444),
                     tag: 'İADE',
-                    tagColor: Color(0xFFdc2626),
+                    tagColor: const Color(0xFFdc2626),
                     onTap: () => _showComingSoon(context, 'Satış İade'),
                   ),
                   const SizedBox(height: 30),
@@ -167,7 +180,7 @@ class SalesScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Color(0xFF667eea).withOpacity(0.1),
+            color: const Color(0xFF667eea).withOpacity(0.1),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -178,10 +191,10 @@ class SalesScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Color(0xFF667eea).withOpacity(0.1),
+              color: const Color(0xFF667eea).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.info_outline_rounded,
               color: Color(0xFF667eea),
               size: 24,
@@ -192,7 +205,7 @@ class SalesScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Satış İşlemi Başlatın',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -223,7 +236,7 @@ class SalesScreen extends StatelessWidget {
           width: 4,
           height: 24,
           decoration: BoxDecoration(
-            color: Color(0xFF667eea),
+            color: const Color(0xFF667eea),
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -241,15 +254,15 @@ class SalesScreen extends StatelessWidget {
   }
 
   Widget _buildSalesButton(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required String tag,
-    required Color tagColor,
-    required VoidCallback onTap,
-  }) {
+      BuildContext context, {
+        required String title,
+        required String subtitle,
+        required IconData icon,
+        required Color color,
+        required String tag,
+        required Color tagColor,
+        required VoidCallback onTap,
+      }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -274,7 +287,6 @@ class SalesScreen extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Sol ikon
               Container(
                 width: 56,
                 height: 56,
@@ -285,20 +297,20 @@ class SalesScreen extends StatelessWidget {
                 child: Icon(icon, color: color, size: 28),
               ),
               const SizedBox(width: 16),
-
-              // Başlık ve açıklama
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1e293b),
+                        Flexible(
+                          child: Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1e293b),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -333,8 +345,6 @@ class SalesScreen extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // Sağ ok
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -379,10 +389,10 @@ class SalesScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Color(0xFF667eea).withOpacity(0.1),
+                color: const Color(0xFF667eea).withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.rocket_launch_rounded,
                 color: Color(0xFF667eea),
                 size: 40,
@@ -408,7 +418,7 @@ class SalesScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF667eea),
+                  backgroundColor: const Color(0xFF667eea),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(

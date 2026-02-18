@@ -3,6 +3,10 @@ import 'package:mobtex_mobile/services/api_service.dart';
 import 'package:mobtex_mobile/screens/login_screen.dart';
 import 'package:mobtex_mobile/screens/sales_screen.dart';
 import 'package:mobtex_mobile/screens/settings_screen.dart';
+import 'package:mobtex_mobile/screens/toptan_satis_screen.dart';
+import 'package:mobtex_mobile/screens/perakende_satis_screen.dart';
+import 'package:mobtex_mobile/screens/depolar_arasi_transfer_screen.dart';
+import 'package:mobtex_mobile/screens/arabadan_transfer_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -120,13 +124,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             title: 'Depolar Arası',
                             icon: Icons.swap_horiz_rounded,
                             color: Color(0xFF667eea),
-                            onTap: () => _showComingSoon('Depolar Arası'),
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DepolarArasiTransferScreen())), // ← DEĞİŞTİ
                           ),
                           MenuButton(
                             title: 'Araba\'dan',
                             icon: Icons.local_shipping_rounded,
                             color: Color(0xFF06b6d4),
-                            onTap: () => _showComingSoon('Araba\'dan'),
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ArabadanTransferScreen())), // ← DEĞİŞTİ
                           ),
                         ]),
                         const SizedBox(height: 32),
@@ -286,7 +290,71 @@ class _HomeScreenState extends State<HomeScreen> {
       children: buttons,
     );
   }
-
+  Widget _buildQuickActions() {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      children: [
+        _buildActionCard('Toptan Satış', Icons.shopping_cart_rounded, const Color(0xFF10b981), () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const ToptanSatisScreen()));
+        }),
+        _buildActionCard('Perakende Satış', Icons.storefront_rounded, const Color(0xFF059669), () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const PerakendeSatisScreen()));
+        }),
+        _buildActionCard('Satış', Icons.point_of_sale_rounded, const Color(0xFF10b981), () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const SalesScreen()));
+        }),
+        _buildActionCard('Ayarlar', Icons.settings_rounded, const Color(0xFF6366f1), () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
+        }),
+      ],
+    );
+  }
+  Widget _buildActionCard(String title, IconData icon, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 36),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1e293b),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
   void _showComingSoon(String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

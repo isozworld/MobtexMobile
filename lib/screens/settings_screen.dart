@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobtex_mobile/screens/data_sync_screen.dart';
 import 'package:mobtex_mobile/screens/active_company_screen.dart';
+import 'package:mobtex_mobile/screens/scanned_barcodes_screen.dart';
+import 'package:mobtex_mobile/screens/send_data_screen.dart'; // ← EKLE
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -11,12 +13,11 @@ class SettingsScreen extends StatelessWidget {
       backgroundColor: Colors.grey[100],
       body: CustomScrollView(
         slivers: [
-          // AppBar
           SliverAppBar(
             expandedHeight: 160,
             floating: false,
             pinned: true,
-            backgroundColor: Color(0xFF64748b),
+            backgroundColor: const Color(0xFF64748b),
             leading: IconButton(
               icon: Container(
                 padding: const EdgeInsets.all(8),
@@ -24,13 +25,12 @@ class SettingsScreen extends StatelessWidget {
                   color: Colors.white.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.arrow_back,
-                    color: Colors.white, size: 20),
+                child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
               ),
               onPressed: () => Navigator.pop(context),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+              titlePadding: const EdgeInsets.only(left: 72, bottom: 16),
               title: const Text(
                 'Ayarlar',
                 style: TextStyle(
@@ -50,11 +50,9 @@ class SettingsScreen extends StatelessWidget {
                 child: Stack(
                   children: [
                     Positioned(
-                      right: -30,
-                      top: -30,
+                      right: -30, top: -30,
                       child: Container(
-                        width: 150,
-                        height: 150,
+                        width: 150, height: 150,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white.withOpacity(0.08),
@@ -62,11 +60,9 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
                     Positioned(
-                      right: 40,
-                      top: 30,
+                      right: 40, top: 30,
                       child: Container(
-                        width: 80,
-                        height: 80,
+                        width: 80, height: 80,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white.withOpacity(0.08),
@@ -74,8 +70,7 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
                     Positioned(
-                      right: 30,
-                      bottom: 20,
+                      right: 30, bottom: 20,
                       child: Icon(
                         Icons.settings_rounded,
                         size: 80,
@@ -88,52 +83,61 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
 
-          // İçerik
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Bilgi kartı
                   _buildInfoCard(),
                   const SizedBox(height: 24),
-
-                  // Başlık
                   _buildSectionTitle('Sistem Ayarları'),
                   const SizedBox(height: 16),
 
-                  // Veri Sync
-                  _buildSettingsButton(
-                    context,
-                    title: 'Veri Sync',
-                    subtitle: 'Sunucu ile veri senkronizasyonu',
-                    icon: Icons.sync_rounded,
-                    color: Color(0xFF8b5cf6),
-                    tag: 'SYNC',
-                    tagColor: Color(0xFF6d28d9),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const DataSyncScreen()),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Aktif Şirket
-                  _buildSettingsButton(
-                    context,
-                    title: 'Aktif Şirket Bilgileri',
-                    subtitle: 'Bağlı şirket ve bağlantı detayları',
-                    icon: Icons.apartment_rounded,
-                    color: Color(0xFF0ea5e9),
-                    tag: 'BİLGİ',
-                    tagColor: Color(0xFF0284c7),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const ActiveCompanyScreen()),
-                    ),
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.1,
+                    children: [
+                      _buildGridButton(
+                        context,
+                        title: 'Veri Sync',
+                        icon: Icons.sync_rounded,
+                        color: const Color(0xFF8b5cf6),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DataSyncScreen())),
+                      ),
+                      _buildGridButton(
+                        context,
+                        title: 'Aktif Şirket',
+                        icon: Icons.apartment_rounded,
+                        color: const Color(0xFF0ea5e9),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ActiveCompanyScreen())),
+                      ),
+                      _buildGridButton(
+                        context,
+                        title: 'Okutulan Barkodlar',
+                        icon: Icons.qr_code_scanner_rounded,
+                        color: const Color(0xFF10b981),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ScannedBarcodesScreen())),
+                      ),
+                      _buildGridButton(
+                        context,
+                        title: 'Verileri Gönder',
+                        icon: Icons.cloud_upload_rounded,
+                        color: const Color(0xFF3b82f6),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SendDataScreen())),
+                      ),
+                      _buildGridButton(
+                        context,
+                        title: 'Hakkında',
+                        icon: Icons.info_rounded,
+                        color: const Color(0xFF6366f1),
+                        onTap: () {}, // Placeholder
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 30),
                 ],
@@ -164,10 +168,10 @@ class SettingsScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Color(0xFF64748b).withOpacity(0.1),
+              color: const Color(0xFF64748b).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.info_outline_rounded,
               color: Color(0xFF64748b),
               size: 24,
@@ -206,7 +210,7 @@ class SettingsScreen extends StatelessWidget {
           width: 4,
           height: 24,
           decoration: BoxDecoration(
-            color: Color(0xFF64748b),
+            color: const Color(0xFF64748b),
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -223,102 +227,56 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsButton(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required String tag,
-    required Color tagColor,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.15),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
-            ],
-            border: Border.all(
-              color: color.withOpacity(0.2),
-              width: 1.5,
+  Widget _buildGridButton(
+      BuildContext context, {
+        required String title,
+        required IconData icon,
+        required Color color,
+        required VoidCallback onTap,
+      }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: color, size: 28),
+          ],
+          border: Border.all(color: color.withOpacity(0.2), width: 1.5),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1e293b),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: tagColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            tag,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: tagColor,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                    ),
-                  ],
+              child: Icon(icon, color: color, size: 32),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1e293b),
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.arrow_forward_ios_rounded,
-                    color: color, size: 14),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
