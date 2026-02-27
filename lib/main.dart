@@ -313,7 +313,6 @@ class _CurtainPanel extends StatelessWidget {
     );
   }
 }
-
 class _CurtainPainter extends CustomPainter {
   final double progress;
   final bool isLeft;
@@ -323,75 +322,118 @@ class _CurtainPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Kadife doku dalgaları
-    const waveCount = 5;
-    final waveWidth = size.width / waveCount;
-    final amplitude = waveWidth * 0.18;
+    // Modern şeffaf desen çizgileri
+    const lineCount = 12;
+    final lineSpacing = size.width / lineCount;
+    final amplitude = lineSpacing * 0.3;
     final phase = progress * 2 * math.pi;
 
-    for (int i = 0; i <= waveCount; i++) {
-      final x = isLeft
-          ? size.width - i * waveWidth
-          : i * waveWidth;
+    // Arka plan - gradient ile daha şık
+    final bgPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          color.withOpacity(0.95),
+          color.withOpacity(0.85),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
 
-      final shade = (i % 2 == 0) ? 0.0 : 0.15;
-      final paint = Paint()
-        ..color = Color.lerp(color, Colors.black, shade)!.withOpacity(0.95)
-        ..style = PaintingStyle.fill;
+    // Modern diagonal desenler (perde deseni)
+    for (int i = 0; i < lineCount; i++) {
+      final x = i * lineSpacing;
+
+      // Ana çizgi
+      final linePaint = Paint()
+        ..color = Colors.white.withOpacity(0.08)
+        ..strokeWidth = 2
+        ..style = PaintingStyle.stroke;
 
       final path = Path();
+      path.moveTo(x, 0);
 
-      if (isLeft) {
-        path.moveTo(0, 0);
-        path.lineTo(x, 0);
-        for (double y = 0; y <= size.height; y += 4) {
-          final wave = math.sin(y / size.height * 3 * math.pi + phase + i * 0.5) * amplitude;
-          path.lineTo(x + wave, y);
-        }
-        path.lineTo(0, size.height);
-        path.close();
-      } else {
-        path.moveTo(size.width, 0);
-        path.lineTo(x, 0);
-        for (double y = 0; y <= size.height; y += 4) {
-          final wave = math.sin(y / size.height * 3 * math.pi + phase + i * 0.5) * amplitude;
-          path.lineTo(x - wave, y);
-        }
-        path.lineTo(size.width, size.height);
-        path.close();
+      for (double y = 0; y <= size.height; y += 5) {
+        final wave = math.sin(y / size.height * 4 * math.pi + phase + i * 0.3) * amplitude;
+        path.lineTo(x + wave, y);
       }
 
-      canvas.drawPath(path, paint);
+      canvas.drawPath(path, linePaint);
+
+      // İkinci katman çizgi (daha ince)
+      final thinLinePaint = Paint()
+        ..color = Colors.white.withOpacity(0.04)
+        ..strokeWidth = 1
+        ..style = PaintingStyle.stroke;
+
+      final thinPath = Path();
+      thinPath.moveTo(x + lineSpacing / 2, 0);
+
+      for (double y = 0; y <= size.height; y += 5) {
+        final wave = math.sin(y / size.height * 4 * math.pi - phase + i * 0.3) * (amplitude * 0.5);
+        thinPath.lineTo(x + lineSpacing / 2 + wave, y);
+      }
+
+      canvas.drawPath(thinPath, thinLinePaint);
     }
 
-    // Perde kenar çizgisi (parlak)
+    // Kenar parıltısı
     final edgePaint = Paint()
-      ..color = Colors.white.withOpacity(0.25)
+      ..color = Colors.white.withOpacity(0.3)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+      ..strokeWidth = 3;
 
     final edgePath = Path();
-    final edgeX = isLeft ? size.width : 0.0;
+    final edgeX = isLeft ? size.width - 1 : 1.0;
 
     edgePath.moveTo(edgeX, 0);
-    for (double y = 0; y <= size.height; y += 4) {
-      final wave = math.sin(y / size.height * 3 * math.pi + phase) * amplitude;
+    for (double y = 0; y <= size.height; y += 3) {
+      final wave = math.sin(y / size.height * 4 * math.pi + phase) * (amplitude * 0.8);
       edgePath.lineTo(isLeft ? edgeX + wave : edgeX - wave, y);
     }
     canvas.drawPath(edgePath, edgePaint);
 
-    // Üst korniş
-    final cornisePaint = Paint()
-      ..color = const Color(0xFF2d2d5e)
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, 18), cornisePaint);
+    // Üst korniş (modern)
+    final corniceGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        const Color(0xFF2d2d5e).withOpacity(0.95),
+        const Color(0xFF1a1a3e).withOpacity(0.9),
+      ],
+    ).createShader(Rect.fromLTWH(0, 0, size.width, 25));
 
-    // Korniş parlaklık çizgisi
+    final cornicePaint = Paint()
+      ..shader = corniceGradient
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, 25), cornicePaint);
+
+    // Korniş alt çizgisi (parlak)
     final shinePaint = Paint()
-      ..color = Colors.white.withOpacity(0.3)
-      ..strokeWidth = 1.5
+      ..shader = LinearGradient(
+        colors: [
+          Colors.white.withOpacity(0.4),
+          Colors.white.withOpacity(0.2),
+          Colors.white.withOpacity(0.4),
+        ],
+      ).createShader(Rect.fromLTWH(0, 24, size.width, 2))
+      ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
-    canvas.drawLine(const Offset(0, 18), Offset(size.width, 18), shinePaint);
+    canvas.drawLine(const Offset(0, 25), Offset(size.width, 25), shinePaint);
+
+    // Nokta desenleri (modern touch)
+    final dotPaint = Paint()
+      ..color = Colors.white.withOpacity(0.06)
+      ..style = PaintingStyle.fill;
+
+    for (int row = 0; row < 20; row++) {
+      for (int col = 0; col < 6; col++) {
+        final x = col * lineSpacing * 2 + lineSpacing;
+        final y = row * (size.height / 20) + 50;
+        final wave = math.sin((y / size.height) * 2 * math.pi + phase + col * 0.5) * 3;
+        canvas.drawCircle(Offset(x + wave, y), 1.5, dotPaint);
+      }
+    }
   }
 
   @override

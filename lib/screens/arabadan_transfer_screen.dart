@@ -29,6 +29,12 @@ class _ArabadanTransferScreenState extends State<ArabadanTransferScreen> {
     _loadData();
   }
 
+  // Getter - hedef depoları filtrele
+  List<Map<String, dynamic>> get _availableHedefDepolar {
+    if (_selectedKaynakDepo == null) return _depolar;
+    return _depolar.where((d) => d['DEPO_KODU'] != _selectedKaynakDepo).toList();
+  }
+
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
 
@@ -54,18 +60,23 @@ class _ArabadanTransferScreenState extends State<ArabadanTransferScreen> {
     // Son seçimleri yükle
     final lastSelections = await _dbHelper.getArabadanTransferSelections();
     if (lastSelections != null) {
-      setState(() {
-        _selectedKaynakDepo = lastSelections['kaynakDepoKodu'] as int?;
-        _selectedHedefDepo = lastSelections['hedefDepoKodu'] as int?;
-      });
+      final kaynakDepo = lastSelections['kaynakDepoKodu'] as int?;
+      final hedefDepo = lastSelections['hedefDepoKodu'] as int?;
+
+      // Kaynak depo listede var mı kontrol et
+      if (kaynakDepo != null && _depolar.any((d) => d['DEPO_KODU'] == kaynakDepo)) {
+        _selectedKaynakDepo = kaynakDepo;
+      }
+
+      // Hedef depo listede var mı ve kaynak ile farklı mı kontrol et
+      if (hedefDepo != null &&
+          _depolar.any((d) => d['DEPO_KODU'] == hedefDepo) &&
+          hedefDepo != _selectedKaynakDepo) {
+        _selectedHedefDepo = hedefDepo;
+      }
     }
 
     setState(() => _isLoading = false);
-  }
-
-  List<Map<String, dynamic>> get _availableHedefDepolar {
-    if (_selectedKaynakDepo == null) return _depolar;
-    return _depolar.where((d) => d['DEPO_KODU'] != _selectedKaynakDepo).toList();
   }
 
   void _navigateToBarcodeScan() {
@@ -279,7 +290,9 @@ class _ArabadanTransferScreenState extends State<ArabadanTransferScreen> {
           Text('Kaynak Depo (Araba)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[700])),
           const SizedBox(height: 8),
           DropdownButtonFormField<int>(
-            value: _selectedKaynakDepo,
+            value: _selectedKaynakDepo != null && _depolar.any((d) => d['DEPO_KODU'] == _selectedKaynakDepo)
+                ? _selectedKaynakDepo
+                : null,
             decoration: _inputDec('Kaynak Depo Seçiniz', Icons.local_shipping_rounded),
             isExpanded: true,
             items: _depolar.map((item) {
@@ -303,15 +316,19 @@ class _ArabadanTransferScreenState extends State<ArabadanTransferScreen> {
           Text('Hedef Depo', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[700])),
           const SizedBox(height: 8),
           DropdownButtonFormField<int>(
-            value: _selectedHedefDepo,
+            value: _selectedHedefDepo != null && _availableHedefDepolar.any((d) => d['DEPO_KODU'] == _selectedHedefDepo)
+                ? _selectedHedefDepo
+                : null,
             decoration: _inputDec('Hedef Depo Seçiniz', Icons.warehouse_rounded),
             isExpanded: true,
-            items: _availableHedefDepolar.map((item) {
+            items: _availableHedefDepolar.isEmpty
+                ? [const DropdownMenuItem(value: null, child: Text('Önce kaynak depo seçin'))]
+                : _availableHedefDepolar.map((item) {
               final kod = item['DEPO_KODU'] as int;
               final isim = item['DEPO_ISMI'] as String;
               return DropdownMenuItem<int>(value: kod, child: Text('$kod - $isim', overflow: TextOverflow.ellipsis));
             }).toList(),
-            onChanged: (v) => setState(() => _selectedHedefDepo = v),
+            onChanged: _availableHedefDepolar.isEmpty ? null : (v) => setState(() => _selectedHedefDepo = v),
           ),
           const SizedBox(height: 28),
 

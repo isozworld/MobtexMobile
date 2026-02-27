@@ -357,7 +357,7 @@ class _ToptanSatisScreenState extends State<ToptanSatisScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Müşteri Arama
+// Müşteri Arama
           Text('Müşteri', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[700])),
           const SizedBox(height: 8),
           TextField(
@@ -365,7 +365,20 @@ class _ToptanSatisScreenState extends State<ToptanSatisScreen> {
             decoration: InputDecoration(
               hintText: 'Müşteri kodu veya ismi ile ara...',
               prefixIcon: const Icon(Icons.search, color: Color(0xFF10b981)),
-              suffixIcon: _isSearching ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : null,
+              suffixIcon: _isSearching
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : (_cariController.text.isNotEmpty
+                  ? IconButton(
+                icon: const Icon(Icons.clear, size: 20),
+                onPressed: () {
+                  setState(() {
+                    _cariController.clear();
+                    _selectedCari = null;
+                  });
+                  _searchCari('');
+                },
+              )
+                  : null),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
               focusedBorder: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12)), borderSide: BorderSide(color: Color(0xFF10b981), width: 2)),

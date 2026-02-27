@@ -189,4 +189,94 @@ Future<Map<String, dynamic>> syncAllData(String companyCode, String terminalId) 
       };
     }
   }
+  Future<Map<String, dynamic>> getSeriDetay({
+    required String companyCode,
+    required int subeKodu,
+    required String seriNo,
+    String? username,
+    String? terminalId,
+  }) async {
+    try {
+      final url = await baseUrl;
+      final headers = await _authHeaders();
+
+      final response = await http.post(
+        Uri.parse('$url/api/stock/seri-detay'),
+        headers: headers,
+        body: jsonEncode({
+          'companyCode': companyCode,
+          'subeKodu': subeKodu,
+          'seriNo': seriNo,
+          'username': username ?? '',
+          'terminalId': terminalId ?? '',
+        }),
+      ).timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'data': data,
+        };
+      } else if (response.statusCode == 401) {
+        return {
+          'success': false,
+          'errorMessage': 'Oturum süresi dolmuş, tekrar giriş yapın',
+        };
+      } else {
+        final data = jsonDecode(response.body);
+        return {
+          'success': false,
+          'errorMessage': data['errorMessage'] ?? 'Sunucu hatası (${response.statusCode})',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'errorMessage': 'Bağlantı hatası: $e',
+      };
+    }
+  }
+  Future<Map<String, dynamic>> resendLastData({
+    required String companyCode,
+    required int subeKodu,
+    required String terminalId,
+    String? username,
+  }) async {
+    try {
+      final url = await baseUrl;
+      final headers = await _authHeaders();
+
+      final response = await http.post(
+        Uri.parse('$url/api/mobiledata/resend-last'),
+        headers: headers,
+        body: jsonEncode({
+          'companyCode': companyCode,
+          'subeKodu': subeKodu,
+          'terminalId': terminalId,
+          'username': username ?? '',
+        }),
+      ).timeout(const Duration(seconds: 60));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': data['success'] ?? false,
+          'message': data['message'],
+          'data': data,
+        };
+      } else {
+        return {
+          'success': false,
+          'errorMessage': 'Sunucu hatası (${response.statusCode})',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'errorMessage': 'Bağlantı hatası: $e',
+      };
+    }
+  }
+
 }

@@ -547,8 +547,15 @@ class _CameraScannerDialogState extends State<_CameraScannerDialog> {
   }
 
   void _onBarcodeDetected(BarcodeCapture capture) {
-    final barcode = capture.barcodes.firstOrNull?.rawValue;
+    var barcode = capture.barcodes.firstOrNull?.rawValue;
     if (barcode != null && barcode.isNotEmpty) {
+      // ]C1, ]E0, ]d2 gibi prefix'leri temizle
+      if (barcode.startsWith(']')) {
+        final match = RegExp(r'^\][A-Za-z0-9]{2}').firstMatch(barcode);
+        if (match != null) {
+          barcode = barcode.substring(match.end);
+        }
+      }
       widget.onBarcodeDetected(barcode);
     }
   }

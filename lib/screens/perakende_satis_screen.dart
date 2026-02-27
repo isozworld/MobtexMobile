@@ -66,19 +66,46 @@ class _PerakendeSatisScreenState extends State<PerakendeSatisScreen> {
       }
     }
 
-    // Son seçimleri yükle
+    // Son seçimleri yükle ve validasyon yap
     final lastSelections = await _dbHelper.getPerakendeSatisSelections();
     if (lastSelections != null) {
-      setState(() {
-        _selectedCari = lastSelections['cariKod'] as String?;
-        _cariController.text = lastSelections['cariText'] as String? ?? '';
-        _selectedDepo = lastSelections['depoKodu'] as int?;
-        _selectedDoviz = lastSelections['dovizTipi'] as int?;
-        _selectedOzelKod1 = lastSelections['ozelKod1'] as String?;
-        _selectedOzelKod2 = lastSelections['ozelKod2'] as String?;
-        _selectedFiyatTipi = lastSelections['fiyatTipi'] as String?;
-        _selectedPlasiyer = lastSelections['plasiyerKod'] as String?;
-      });
+      // Cari
+      _selectedCari = lastSelections['cariKod'] as String?;
+      _cariController.text = lastSelections['cariText'] as String? ?? '';
+
+      // Depo - listede var mı kontrol et
+      final depoKodu = lastSelections['depoKodu'] as int?;
+      if (depoKodu != null && _depolar.any((d) => d['DEPO_KODU'] == depoKodu)) {
+        _selectedDepo = depoKodu;
+      }
+
+      // Döviz tipi - 0, 1, 2 aralığında mı kontrol et
+      final dovizTipi = lastSelections['dovizTipi'] as int?;
+      if (dovizTipi != null && dovizTipi >= 0 && dovizTipi <= 2) {
+        _selectedDoviz = dovizTipi;
+      }
+
+      // Özel kod 1 - listede var mı kontrol et
+      final ozelKod1 = lastSelections['ozelKod1'] as String?;
+      if (ozelKod1 != null && _ozelKod1.any((o) => o['OZELKOD'] == ozelKod1)) {
+        _selectedOzelKod1 = ozelKod1;
+      }
+
+      // Özel kod 2 - listede var mı kontrol et
+      final ozelKod2 = lastSelections['ozelKod2'] as String?;
+      if (ozelKod2 != null && _ozelKod2.any((o) => o['OZELKOD'] == ozelKod2)) {
+        _selectedOzelKod2 = ozelKod2;
+      }
+
+      // Fiyat tipi - listede var mı kontrol et
+      final fiyatTipi = lastSelections['fiyatTipi'] as String?;
+      if (fiyatTipi != null && _fiyatTipleri.any((f) => f['TIPKODU'] == fiyatTipi)) {
+        _selectedFiyatTipi = fiyatTipi;
+      }
+
+      // Plasiyer
+      _selectedPlasiyer = lastSelections['plasiyerKod'] as String?;
+      _plasiyerController.text = lastSelections['plasiyerText'] as String? ?? '';
     }
 
     setState(() => _isLoading = false);
@@ -357,7 +384,7 @@ class _PerakendeSatisScreenState extends State<PerakendeSatisScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Müşteri Arama
+// Müşteri Arama
           Text('Müşteri', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[700])),
           const SizedBox(height: 8),
           TextField(
@@ -365,7 +392,20 @@ class _PerakendeSatisScreenState extends State<PerakendeSatisScreen> {
             decoration: InputDecoration(
               hintText: 'Müşteri kodu veya ismi ile ara...',
               prefixIcon: const Icon(Icons.search, color: Color(0xFF10b981)),
-              suffixIcon: _isSearching ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : null,
+              suffixIcon: _isSearching
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : (_cariController.text.isNotEmpty
+                  ? IconButton(
+                icon: const Icon(Icons.clear, size: 20),
+                onPressed: () {
+                  setState(() {
+                    _cariController.clear();
+                    _selectedCari = null;
+                  });
+                  _searchCari('');
+                },
+              )
+                  : null),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
               focusedBorder: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12)), borderSide: BorderSide(color: Color(0xFF10b981), width: 2)),
@@ -401,8 +441,11 @@ class _PerakendeSatisScreenState extends State<PerakendeSatisScreen> {
           // Depo
           Text('Depo', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[700])),
           const SizedBox(height: 8),
+          // Depo Dropdown
           DropdownButtonFormField<int>(
-            value: _selectedDepo,
+            value: _selectedDepo != null && _depolar.any((d) => d['DEPO_KODU'] == _selectedDepo)
+                ? _selectedDepo
+                : null,
             decoration: _inputDec('Depo Seçiniz', Icons.warehouse_rounded),
             isExpanded: true,
             items: _depolar.map((item) {
@@ -417,13 +460,16 @@ class _PerakendeSatisScreenState extends State<PerakendeSatisScreen> {
           // Döviz Tipi
           Text('Döviz Tipi', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[700])),
           const SizedBox(height: 8),
+          // Döviz Tipi Dropdown
           DropdownButtonFormField<int>(
-            value: _selectedDoviz,
-            decoration: _inputDec('Döviz Tipi Seçiniz', Icons.attach_money_rounded),
+            value: _selectedDoviz != null && _selectedDoviz! >= 0 && _selectedDoviz! <= 2
+                ? _selectedDoviz
+                : null,
+            decoration: _inputDec('Döviz Tipi', Icons.currency_exchange_rounded),
             items: const [
-              DropdownMenuItem(value: 0, child: Text('0 - TL')),
-              DropdownMenuItem(value: 1, child: Text('1 - USD')),
-              DropdownMenuItem(value: 2, child: Text('2 - EUR')),
+              DropdownMenuItem(value: 0, child: Text('TL')),
+              DropdownMenuItem(value: 1, child: Text('USD')),
+              DropdownMenuItem(value: 2, child: Text('EUR')),
             ],
             onChanged: (v) => setState(() => _selectedDoviz = v),
           ),
@@ -432,14 +478,17 @@ class _PerakendeSatisScreenState extends State<PerakendeSatisScreen> {
           // Özel Kod 1
           Text('Özel Kod 1', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[700])),
           const SizedBox(height: 8),
+          // Özel Kod 1 Dropdown
           DropdownButtonFormField<String>(
-            value: _selectedOzelKod1,
-            decoration: _inputDec('Özel Kod 1 Seçiniz', Icons.label_rounded),
+            value: _selectedOzelKod1 != null && _ozelKod1.any((o) => o['OZELKOD'] == _selectedOzelKod1)
+                ? _selectedOzelKod1
+                : null,
+            decoration: _inputDec('Özel Kod 1', Icons.label_outline),
             isExpanded: true,
             items: _ozelKod1.map((item) {
               final kod = item['OZELKOD'] as String;
-              final acik = item['ACIKLAMA'] as String;
-              return DropdownMenuItem<String>(value: kod, child: Text('$kod - $acik', overflow: TextOverflow.ellipsis));
+              final aciklama = item['ACIKLAMA'] as String;
+              return DropdownMenuItem<String>(value: kod, child: Text('$kod - $aciklama', overflow: TextOverflow.ellipsis));
             }).toList(),
             onChanged: (v) => setState(() => _selectedOzelKod1 = v),
           ),
@@ -448,14 +497,17 @@ class _PerakendeSatisScreenState extends State<PerakendeSatisScreen> {
           // Özel Kod 2
           Text('Özel Kod 2', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[700])),
           const SizedBox(height: 8),
+          // Özel Kod 2 Dropdown
           DropdownButtonFormField<String>(
-            value: _selectedOzelKod2,
-            decoration: _inputDec('Özel Kod 2 Seçiniz', Icons.label_outlined),
+            value: _selectedOzelKod2 != null && _ozelKod2.any((o) => o['OZELKOD'] == _selectedOzelKod2)
+                ? _selectedOzelKod2
+                : null,
+            decoration: _inputDec('Özel Kod 2', Icons.label),
             isExpanded: true,
             items: _ozelKod2.map((item) {
               final kod = item['OZELKOD'] as String;
-              final acik = item['ACIKLAMA'] as String;
-              return DropdownMenuItem<String>(value: kod, child: Text('$kod - $acik', overflow: TextOverflow.ellipsis));
+              final aciklama = item['ACIKLAMA'] as String;
+              return DropdownMenuItem<String>(value: kod, child: Text('$kod - $aciklama', overflow: TextOverflow.ellipsis));
             }).toList(),
             onChanged: (v) => setState(() => _selectedOzelKod2 = v),
           ),
@@ -464,8 +516,11 @@ class _PerakendeSatisScreenState extends State<PerakendeSatisScreen> {
           // Fiyat Tipi
           Text('Fiyat Tipi', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey[700])),
           const SizedBox(height: 8),
+          // Fiyat Tipi Dropdown
           DropdownButtonFormField<String>(
-            value: _selectedFiyatTipi,
+            value: _selectedFiyatTipi != null && _fiyatTipleri.any((f) => f['TIPKODU'] == _selectedFiyatTipi)
+                ? _selectedFiyatTipi
+                : null,
             decoration: _inputDec('Fiyat Tipi Seçiniz', Icons.price_check_rounded),
             isExpanded: true,
             items: _fiyatTipleri.map((item) {

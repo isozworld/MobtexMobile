@@ -17,7 +17,8 @@ class _SendDataScreenState extends State<SendDataScreen> {
   List<Map<String, dynamic>> _prosesList = [];
   bool _isLoading = true;
   bool _isSending = false;
-
+  int _totalBarcodes = 0;
+  String _terminalId = '';
   final Map<int, String> _prosesNames = {
     0: 'Toptan Satış',
     1: 'Perakende Satış',
@@ -51,8 +52,20 @@ class _SendDataScreenState extends State<SendDataScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     final list = await _dbHelper.getMrtcProsesList();
+
+    // Toplam barkod sayısını hesapla
+    int total = 0;
+    for (var proses in list) {
+      total += (proses['barcodeCount'] as int? ?? 0);
+    }
+
+    // Terminal ID'yi al
+    final termId = await _dbHelper.getTerminalId();
+
     setState(() {
       _prosesList = list;
+      _totalBarcodes = total;
+      _terminalId = termId ?? '';
       _isLoading = false;
     });
   }
@@ -200,40 +213,175 @@ class _SendDataScreenState extends State<SendDataScreen> {
   }
 
   Widget _buildContent() {
-    final totalBarcodes = _prosesList.fold<int>(0, (sum, p) => sum + (p['barcodeCount'] as int));
-
-    return SingleChildScrollView(
+    return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildInfoCard(totalBarcodes),
+          // İstatistik kartı
+          _buildStatsCard(),
           const SizedBox(height: 24),
-          _buildSectionTitle('Proses Detayları'),
-          const SizedBox(height: 16),
-          ..._prosesList.map((proses) => _buildProsesCard(proses)),
-          const SizedBox(height: 30),
+
+          // Gönder butonu
           SizedBox(
             width: double.infinity,
-            height: 56,
+            height: 60,
             child: ElevatedButton.icon(
-              onPressed: _sendData,
-              icon: const Icon(Icons.cloud_upload_rounded, size: 28),
-              label: const Text('Verileri Gönder', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+              onPressed: _isSending ? null : () {
+                if (_totalBarcodes == 0) {
+                  _showResendConfirmation();
+                } else {
+                  _sendData();
+                }
+              },
+              icon: _isSending
+                  ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+              )
+                  : Icon(_totalBarcodes == 0 ? Icons.refresh : Icons.cloud_upload, size: 28),
+              label: Text(
+                _isSending
+                    ? 'Gönderiliyor...'
+                    : (_totalBarcodes == 0 ? 'Son Verilerden İşlem Yap' : 'Verileri Gönder'),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF10b981),
+                backgroundColor: _totalBarcodes == 0 ? const Color(0xFFf59e0b) : const Color(0xFF3b82f6),
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 4,
               ),
             ),
           ),
-          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+  Widget _buildStatsCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: _totalBarcodes == 0
+              ? [const Color(0xFFf59e0b), const Color(0xFFd97706)]
+              : [const Color(0xFF3b82f6), const Color(0xFF2563eb)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: (_totalBarcodes == 0 ? const Color(0xFFf59e0b) : const Color(0xFF3b82f6)).withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(
+            _totalBarcodes == 0 ? Icons.refresh_rounded : Icons.cloud_upload_rounded,
+            color: Colors.white,
+            size: 48,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _totalBarcodes == 0 ? 'Veri Bulunamadı' : 'Gönderilmeye Hazır',
+            style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              _totalBarcodes == 0 ? 'Okutulmuş Barkod Yok' : 'Toplam $_totalBarcodes Barkod',
+              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  void _showResendConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Color(0xFFf59e0b), size: 28),
+            SizedBox(width: 12),
+            Text('Dikkat'),
+          ],
+        ),
+        content: const Text(
+          'Cihazınızda okutulmuş barkod bilgisi bulunmamaktadır.\n\n'
+              'En son gönderdiğiniz verilerden yeniden işlem yapmak ister misiniz?',
+          style: TextStyle(fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('İptal', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _resendLastData();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFf59e0b),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Evet, Devam Et'),
+          ),
         ],
       ),
     );
   }
 
+  Future<void> _resendLastData() async {
+    setState(() => _isSending = true);
+
+    try {
+      final companySettings = await _dbHelper.getCompanySettings();
+      if (companySettings == null) {
+        throw Exception('Şirket bilgileri bulunamadı');
+      }
+
+      final companyCode = companySettings['company_code'] as String;
+      final subeKodu = companySettings['sube_kodu'] as int;
+
+      final response = await _apiService.resendLastData(
+        companyCode: companyCode,
+        subeKodu: subeKodu,
+          terminalId: _terminalId,
+      );
+
+      setState(() => _isSending = false);
+
+      if (!mounted) return;
+
+      if (response['success'] == true) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => SendResultScreen(
+              response: response['data'],
+            ),
+          ),
+        );
+      } else {
+        _showSnack(response['errorMessage'] ?? 'İşlem başarısız', isError: true);
+      }
+    } catch (e) {
+      setState(() => _isSending = false);
+      _showSnack('Hata: $e', isError: true);
+    }
+  }
   Widget _buildInfoCard(int totalBarcodes) {
     return Container(
       padding: const EdgeInsets.all(20),

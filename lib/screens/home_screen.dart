@@ -7,6 +7,7 @@ import 'package:mobtex_mobile/screens/toptan_satis_screen.dart';
 import 'package:mobtex_mobile/screens/perakende_satis_screen.dart';
 import 'package:mobtex_mobile/screens/depolar_arasi_transfer_screen.dart';
 import 'package:mobtex_mobile/screens/arabadan_transfer_screen.dart';
+import 'package:mobtex_mobile/screens/reports_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -167,8 +168,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           MenuButton(
                             title: 'Raporlar',
                             icon: Icons.assessment_rounded,
-                            color: Color(0xFFef4444),
-                            onTap: () => _showComingSoon('Raporlar'),
+                            color: const Color(0xFFef4444),
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportsScreen())), // ← DEĞİŞTİ
                           ),
                           MenuButton(
                             title: 'Ayarlar',

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobtex_mobile/screens/seri_ambar_bakiye_screen.dart';
+import 'package:mobtex_mobile/screens/seri_detay_screen.dart';
 
 class ReportsScreen extends StatelessWidget {
   const ReportsScreen({super.key});
@@ -33,10 +34,13 @@ class ReportsScreen extends StatelessWidget {
             ),
             _buildReportCard(
               context,
-              title: 'Stok Durum',
-              icon: Icons.widgets_rounded,
+              title: 'Seri Detay',
+              icon: Icons.qr_code_2_rounded,
               color: const Color(0xFF10b981),
-              onTap: () => _showComingSoon(context, 'Stok Durum'),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) =>   SeriDetayScreen()),
+              ),
             ),
             _buildReportCard(
               context,
