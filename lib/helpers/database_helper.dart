@@ -733,4 +733,43 @@ Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     final sample = await db.query('plasiyerler', limit: 5);
     print('İlk 5 plasiyer: $sample');
   }
+  Future<Map<String, dynamic>?> getIsletmelerArasiSatisSelections() async {
+    final db = await database;
+    final result = await db.query('app_settings',
+        where: 'key = ?', whereArgs: ['isletmeler_arasi_satis_selections']);
+    if (result.isEmpty) return null;
+    try {
+      final value = result.first['value'] as String;
+      return jsonDecode(value) as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> saveIsletmelerArasiSatisSelections({
+    required int hedefIsletmeKodu,
+    required int hedefSubeKodu,
+    required int hedefDepoKodu,
+    required int kaynakDepoKodu,
+  }) async {
+    final db = await database;
+    await db.insert(
+      'app_settings',
+      {
+        'key': 'isletmeler_arasi_satis_selections',
+        'value': jsonEncode({
+          'hedefIsletmeKodu': hedefIsletmeKodu,
+          'hedefSubeKodu': hedefSubeKodu,
+          'hedefDepoKodu': hedefDepoKodu,
+          'kaynakDepoKodu': kaynakDepoKodu,
+        }),
+        'updated_at': DateTime.now().toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+  Future<List<Map<String, dynamic>>> rawQuery(String sql, [List<dynamic>? arguments]) async {
+    final db = await database;
+    return db.rawQuery(sql, arguments);
+  }
 }

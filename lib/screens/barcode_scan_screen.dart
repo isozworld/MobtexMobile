@@ -22,7 +22,7 @@ class BarcodeScanScreen extends StatefulWidget {
   final bool showCuvalTir;
   final int? hedefSubeKodu;
   final int? hedefDepoKodu;
-
+  final int hedefIsletmeKodu;
 
   const BarcodeScanScreen({
     super.key,
@@ -42,6 +42,7 @@ class BarcodeScanScreen extends StatefulWidget {
     this.showCuvalTir = true,
     this.hedefSubeKodu,
     this.hedefDepoKodu,
+    this.hedefIsletmeKodu = 0,
   });
 
   @override
@@ -61,6 +62,7 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
   int _barcodeCount = 0;
   int _cuvalCount = 0;
   String _lastBarcode = '-';
+  String _currentHucre = '';
 
   @override
   void initState() {
@@ -88,6 +90,16 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
     if (barcode.trim().isEmpty) return;
 
     final trimmedBarcode = barcode.trim();
+
+    // Hücre barkodu kontrolü (@...@ formatı)
+    if (trimmedBarcode.startsWith('@') && trimmedBarcode.endsWith('@') && trimmedBarcode.length > 2) {
+      final hucre = trimmedBarcode.substring(1, trimmedBarcode.length - 1);
+      setState(() => _currentHucre = hucre);
+      _showSnack('Hücre seçildi: $hucre');
+      _barcodeController.clear();
+      _barcodeFocus.requestFocus();
+      return;
+    }
 
     if (_deleteMode) {
       final exists = await _dbHelper.isBarcodeExists(trimmedBarcode, widget.prosesId);
@@ -156,7 +168,7 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
       'SB': widget.subeKodu,
       'HS': widget.hedefSubeKodu,
       'IL': widget.isletmeKodu,
-      'HI': null,
+      'HI': widget.hedefIsletmeKodu,
       'O1': widget.ozelKod1,
       'O2': widget.ozelKod2,
       'BR': null,
@@ -170,7 +182,7 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
       'EKF1': null,
       'EKF2': null,
       'EKF3': null,
-      'EKS1': null,
+      'EKS1': _currentHucre.isNotEmpty ? _currentHucre : null,
       'EKS2': null,
       'EKS3': null,
       'FL': null,
@@ -329,7 +341,7 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
 
   Widget _buildStatsCard() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -339,34 +351,91 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
         children: [
           Row(
             children: [
-              Expanded(
-                child: _buildStatItem('Barkod', _barcodeCount.toString(), Icons.qr_code_rounded, const Color(0xFF10b981)),
-              ),
-              Container(width: 1, height: 35, color: Colors.grey[300]),
-              Expanded(
-                child: _buildStatItem('Çuval', _cuvalCount.toString(), Icons.inventory_2_rounded, const Color(0xFFf59e0b)),
-              ),
+              // Sol: Barkod sayısı
+              Icon(Icons.qr_code_rounded, color: const Color(0xFF10b981), size: 18),
+              const SizedBox(width: 6),
+              Text('Barkod:', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+              const SizedBox(width: 4),
+              Text(_barcodeCount.toString(),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF10b981))),
+              const Spacer(),
+              // Sağ: Çuval sayısı
+              Icon(Icons.inventory_2_rounded, color: const Color(0xFFf59e0b), size: 18),
+              const SizedBox(width: 6),
+              Text('Çuval:', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+              const SizedBox(width: 4),
+              Text(_cuvalCount.toString(),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFFf59e0b))),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
             decoration: BoxDecoration(
               color: Colors.grey[50],
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Colors.grey[200]!),
             ),
-            child: Row(
+            child: Column(
               children: [
-                const Icon(Icons.check_circle_rounded, color: Color(0xFF10b981), size: 18),
-                const SizedBox(width: 8),
-                Text('Son Okunan:', style: TextStyle(fontSize: 12, color: Colors.grey[700], fontWeight: FontWeight.w500)),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(_lastBarcode,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1e293b)),
-                      overflow: TextOverflow.ellipsis),
+                Row(
+                  children: [
+                    const Icon(Icons.check_circle_rounded, color: Color(0xFF10b981), size: 16),
+                    const SizedBox(width: 6),
+                    Text('Son:', style: TextStyle(fontSize: 11, color: Colors.grey[700])),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(_lastBarcode,
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1e293b)),
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                  ],
                 ),
+                // Hücre bilgisi - sadece PI:6 için
+                if (widget.prosesId == 6) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_rounded,
+                          color: _currentHucre.isNotEmpty ? const Color(0xFF3b82f6) : Colors.grey[400],
+                          size: 16),
+                      const SizedBox(width: 6),
+                      Text('Hücre:', style: TextStyle(fontSize: 11, color: Colors.grey[700])),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          _currentHucre.isNotEmpty ? _currentHucre : '-',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: _currentHucre.isNotEmpty ? const Color(0xFF3b82f6) : Colors.grey[400],
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (_currentHucre.isNotEmpty)
+                        GestureDetector(
+                          onTap: () => setState(() => _currentHucre = ''),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.red[50],
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.red[200]!),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.close, size: 12, color: Colors.red[700]),
+                                const SizedBox(width: 3),
+                                Text('İptal', style: TextStyle(fontSize: 11, color: Colors.red[700], fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

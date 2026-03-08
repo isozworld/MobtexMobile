@@ -4,7 +4,8 @@ import 'package:mobtex_mobile/helpers/database_helper.dart';
 import 'package:mobtex_mobile/services/api_service.dart';
 
 class SeriDetayScreen extends StatefulWidget {
-  const SeriDetayScreen({super.key});
+  final String? initialSeriNo;
+  const SeriDetayScreen({super.key, this.initialSeriNo});
 
   @override
   State<SeriDetayScreen> createState() => _SeriDetayScreenState();
@@ -25,7 +26,14 @@ class _SeriDetayScreenState extends State<SeriDetayScreen> {
     _seriController.dispose();
     super.dispose();
   }
-
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialSeriNo != null) {
+      _seriController.text = widget.initialSeriNo!;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _search());
+    }
+  }
   Future<void> _search() async {
     final seriNo = _seriController.text.trim();
 

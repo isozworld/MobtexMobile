@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobtex_mobile/screens/toptan_satis_screen.dart';
 import 'package:mobtex_mobile/screens/perakende_satis_screen.dart';
-
+import 'package:mobtex_mobile/screens/isletmeler_arasi_satis_screen.dart';
 class SalesScreen extends StatelessWidget {
   const SalesScreen({super.key});
 
@@ -147,7 +147,12 @@ class SalesScreen extends StatelessWidget {
                     color: const Color(0xFFf59e0b),
                     tag: 'B2B',
                     tagColor: const Color(0xFFd97706),
-                    onTap: () => _showComingSoon(context, 'İşletmeler Arası Satış'),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const IsletmelerArasiSatisScreen(),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 12),
 

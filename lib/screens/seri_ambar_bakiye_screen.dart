@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:mobtex_mobile/helpers/database_helper.dart';
 import 'package:mobtex_mobile/services/api_service.dart';
-
+import 'package:mobtex_mobile/screens/seri_detay_screen.dart';
 class SeriAmbarBakiyeScreen extends StatefulWidget {
   const SeriAmbarBakiyeScreen({super.key});
 
@@ -585,13 +585,23 @@ class _SeriAmbarBakiyeScreenState extends State<SeriAmbarBakiyeScreen> {
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.green[50],
-                        borderRadius: BorderRadius.circular(8),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SeriDetayScreen(initialSeriNo: seri.seriNo),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.green[50],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.qr_code, color: Colors.green[700], size: 20),
                       ),
-                      child: Icon(Icons.qr_code, color: Colors.green[700], size: 20),
                     ),
                     const SizedBox(width: 12),
                     Expanded(

@@ -68,17 +68,23 @@ class _ToptanSatisScreenState extends State<ToptanSatisScreen> {
     // Son seçimleri yükle
     final lastSelections = await _dbHelper.getToptanSatisSelections();
     if (lastSelections != null) {
+      final depo = lastSelections['depoKodu'] as int?;
+      final doviz = lastSelections['dovizTipi'] as int?;
+      final ozel1 = lastSelections['ozelKod1'] as String?;
+      final ozel2 = lastSelections['ozelKod2'] as String?;
+      final fiyat = lastSelections['fiyatTipi'] as String?;
+      final plasiyer = lastSelections['plasiyerKod'] as String?;
+
       setState(() {
         _selectedCari = lastSelections['cariKod'] as String?;
         _cariController.text = lastSelections['cariText'] as String? ?? '';
-        _selectedDepo = lastSelections['depoKodu'] as int?;
-        _selectedDoviz = lastSelections['dovizTipi'] as int?;
-        _selectedOzelKod1 = lastSelections['ozelKod1'] as String?;
-        _selectedOzelKod2 = lastSelections['ozelKod2'] as String?;
-        _selectedFiyatTipi = lastSelections['fiyatTipi'] as String?;
-        _selectedPlasiyer = lastSelections['plasiyerKod'] as String?; // ← EKLE
-        _plasiyerController.text = lastSelections['plasiyerText'] as String? ?? ''; // ← EKLE
-
+        _selectedDepo = (_depolar.any((d) => d['DEPO_KODU'] == depo)) ? depo : null;
+        _selectedDoviz = (doviz != null && [0, 1, 2].contains(doviz)) ? doviz : null;
+        _selectedOzelKod1 = (_ozelKod1.any((o) => o['OZELKOD'] == ozel1)) ? ozel1 : null;
+        _selectedOzelKod2 = (_ozelKod2.any((o) => o['OZELKOD'] == ozel2)) ? ozel2 : null;
+        _selectedFiyatTipi = (_fiyatTipleri.any((f) => f['TIPKODU'] == fiyat)) ? fiyat : null;
+        _selectedPlasiyer = plasiyer;
+        _plasiyerController.text = lastSelections['plasiyerText'] as String? ?? '';
       });
     }
 
