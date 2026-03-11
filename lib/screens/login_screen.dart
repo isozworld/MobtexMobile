@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobtex_mobile/helpers/database_helper.dart';
 import 'package:mobtex_mobile/services/api_service.dart';
 import 'package:mobtex_mobile/screens/home_screen.dart';
+import 'package:mobtex_mobile/helpers/session_manager.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -72,6 +73,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     setState(() => _isLoading = false);
 
     if (result['success'] == true) {
+      // LoginLogId zaten ApiService içinde Session'a kaydedildi
+      // Opsiyonel: Debug için kontrol
+      final loginLogId = SessionManager().loginLogId;
+      print('🔍 Login successful - LoginLogId: $loginLogId');
+
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const HomeScreen()),
@@ -84,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             children: [
               const Icon(Icons.error_outline, color: Colors.white),
               const SizedBox(width: 10),
-              Expanded(child: Text(result['message'] ?? 'Giris hatasi')),
+              Expanded(child: Text(result['errorMessage'] ?? 'Giriş hatası')),
             ],
           ),
           backgroundColor: Colors.red[700],
